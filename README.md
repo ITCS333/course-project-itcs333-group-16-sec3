@@ -3,7 +3,12 @@
 # ITCS### Course Page
 
 ## The names and student IDs of all team members.
-
 ## A table indicating which student was responsible for which task.
+Task | Description | Team Member |
+|------|------------|-------------|
+| Task 1 | Homepage + Admin Portal + User Management | Welayah Hassan |
+| Task 2 | Course Resources | Anwar |
+| Task 3 | Weekly Breakdown | Zahraa |
+| Task 4 | Assignments | Kawther | 
 
 ## A link to your live, hosted application on Replit.

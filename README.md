@@ -3,10 +3,10 @@
 # ITCS333 Course Page
 
 ## Team Members
-- **Welayah Hassan** - 20188715  
-- **Anwar**  
-- **Zahraa**  
-- **Kawther**
+- Welayah Hassan- 20188715  
+- Anwar
+- Zahraa
+- Kawther
 
 ## Task Distribution Table
 | Task | Description | Team Member |

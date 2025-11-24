@@ -6,7 +6,7 @@
 - Welayah Hassan- 20188715  
 - Anwar
 - Zahraa
-- Kawther
+- Kawther Ashor - 202007918
 
 ## Task Distribution Table
 | Task | Description | Team Member |
@@ -14,7 +14,7 @@
 | Task 1 | Homepage + Admin Portal + User Management | Welayah Hassan |
 | Task 2 | Course Resources | Anwar |
 | Task 3 | Weekly Breakdown | Zahraa |
-| Task 4 | Assignments | Kawther |
+| Task 4 | Assignments | Kawther Ahoor |
 
 ## Live Hosted Application
 

@@ -29,30 +29,36 @@
 // Allow cross-origin requests (CORS) if needed
 // Allow specific HTTP methods (GET, POST, PUT, DELETE, OPTIONS)
 // Allow specific headers (Content-Type, Authorization)
-
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *'); 
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
 // TODO: Handle preflight OPTIONS request
 // If the request method is OPTIONS, return 200 status and exit
-
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
 
 // TODO: Include the database connection class
 // Assume the Database class has a method getConnection() that returns a PDO instance
-
+require_once 'Database.php';
 
 // TODO: Get the PDO database connection
-
+$db = (new Database())->getConnection();
 
 // TODO: Get the HTTP request method
 // Use $_SERVER['REQUEST_METHOD']
-
+$method = $_SERVER['REQUEST_METHOD'];
 
 // TODO: Get the request body for POST and PUT requests
 // Use file_get_contents('php://input') to get raw POST data
 // Decode JSON data using json_decode()
 
-
+$input = json_decode(file_get_contents('php://input'), true);
 // TODO: Parse query parameters for filtering and searching
-
+$queryParams = $_GET;
 
 /**
  * Function: Get all students or search for specific students
@@ -67,23 +73,47 @@ function getStudents($db) {
     // TODO: Check if search parameter exists
     // If yes, prepare SQL query with WHERE clause using LIKE
     // Search should work on name, student_id, and email fields
-    
+     $search = isset($_GET['search']) ? '%' . strtolower($_GET['search']) . '%' : null;
     // TODO: Check if sort and order parameters exist
     // If yes, add ORDER BY clause to the query
     // Validate sort field to prevent SQL injection (only allow: name, student_id, email)
     // Validate order to prevent SQL injection (only allow: asc, desc)
-    
+       $allowedSort = ['name', 'student_id', 'email'];
+    $allowedOrder = ['asc', 'desc'];
+
+    $sort = (isset($_GET['sort']) && in_array($_GET['sort'], $allowedSort)) ? $_GET['sort'] : 'name';
+    $order = (isset($_GET['order']) && in_array(strtolower($_GET['order']), $allowedOrder)) ?
+
     // TODO: Prepare the SQL query using PDO
     // Note: Do NOT select the password field
-    
+      $sql = "SELECT student_id, name, email, created_at FROM students";
+
+    if ($search) {
+        $sql .= " WHERE LOWER(name) LIKE :search OR LOWER(student_id) LIKE :search OR LOWER(email) LIKE :search";
+    }
+
+    $sql .= " ORDER BY $sort $order";
+
+    $stmt = $db->prepare($sql);
     // TODO: Bind parameters if using search
-    
+     if ($search) {
+        $stmt->bindParam(':search', $search);
+    }
+
     // TODO: Execute the query
-    
+     $stmt->execute();
+
+    // TODO: Fetch all results as an associative array
+    $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
     // TODO: Fetch all results as an associative array
     
     // TODO: Return JSON response with success status and data
+    sendResponse([
+        "success" => true,
+        "data" => $students
+    ]);
 }
+
 
 
 /**

@@ -17,18 +17,20 @@ let students = [];
 // We can safely select elements here because 'defer' guarantees
 // the HTML document is parsed before this script runs.
 
-// TODO: Select the student table body (tbody).
 
+// TODO: Select the student table body (tbody).
+const studentTableBody = document.getElementById('student-table-body');
 // TODO: Select the "Add Student" form.
 // (You'll need to add id="add-student-form" to this form in your HTML).
-
+const addStudentForm = document.getElementById('add-student-form'); 
 // TODO: Select the "Change Password" form.
 // (You'll need to add id="password-form" to this form in your HTML).
-
+const changePasswordForm = document.getElementById('password-form'); 
 // TODO: Select the search input field.
 // (You'll need to add id="search-input" to this input in your HTML).
-
+const searchInput = document.getElementById('search-input'); 
 // TODO: Select all table header (th) elements in thead.
+const tableHeaders = document.querySelectorAll('thead th'); 
 
 // --- Functions ---
 
@@ -45,7 +47,22 @@ let students = [];
  */
 function createStudentRow(student) {
   // ... your implementation here ...
+ 
+  const tr = document.createElement('tr');
+
+  tr.innerHTML = `
+    <td>${student.name}</td>
+    <td>${student.id}</td>
+    <td>${student.email}</td>
+    <td>
+      <button class="edit-btn" data-id="${student.id}">Edit</button>
+      <button class="delete-btn" data-id="${student.id}">Delete</button>
+    </td>
+  `;
+
+  return tr;
 }
+
 
 /**
  * TODO: Implement the renderTable function.
@@ -57,6 +74,10 @@ function createStudentRow(student) {
  */
 function renderTable(studentArray) {
   // ... your implementation here ...
+   studentTableBody.innerHTML = '';
+  studentArray.forEach(student => {
+    studentTableBody.appendChild(createStudentRow(student));
+  });
 }
 
 /**
@@ -73,7 +94,26 @@ function renderTable(studentArray) {
  */
 function handleChangePassword(event) {
   // ... your implementation here ...
+     event.preventDefault();
+
+  const current = document.getElementById('current-password').value;
+  const newPass = document.getElementById('new-password').value;
+  const confirm = document.getElementById('confirm-password').value;
+
+  if (newPass !== confirm) {
+    alert('Passwords do not match.');
+    return;
+  }
+
+  if (newPass.length < 8) {
+    alert('Password must be at least 8 characters.');
+    return;
+  }
+
+  alert('Password updated successfully!');
+  changePasswordForm.reset();
 }
+
 
 /**
  * TODO: Implement the handleAddStudent function.
@@ -92,6 +132,27 @@ function handleChangePassword(event) {
  */
 function handleAddStudent(event) {
   // ... your implementation here ...
+  event.preventDefault();
+
+  const name = document.getElementById('student-name').value.trim();
+  const id = document.getElementById('student-id').value.trim();
+  const email = document.getElementById('student-email').value.trim();
+
+  if (!name || !id || !email) {
+    alert('Please fill out all required fields.');
+    return;
+  }
+
+  if (students.some(s => s.id === id)) {
+    alert('A student with this ID already exists.');
+    return;
+  }
+
+  const newStudent = { name, id, email };
+  students.push(newStudent);
+  renderTable(students);
+
+  addStudentForm.reset();
 }
 
 /**
@@ -107,6 +168,28 @@ function handleAddStudent(event) {
  */
 function handleTableClick(event) {
   // ... your implementation here ...
+  if (event.target.classList.contains('delete-btn')) {
+    const id = event.target.dataset.id;
+    students = students.filter(student => student.id !== id);
+    renderTable(students);
+  }
+
+  // TODO: Add edit functionality later if needed
+}
+
+// Handle search input
+function handleSearch() {
+  const term = searchInput.value.toLowerCase();
+
+  if (!term) {
+    renderTable(students);
+    return;
+  }
+
+  const filtered = students.filter(student =>
+    student.name.toLowerCase().includes(term)
+  );
+  renderTable(filtered);
 }
 
 /**
@@ -122,6 +205,19 @@ function handleTableClick(event) {
  */
 function handleSearch(event) {
   // ... your implementation here ...
+   const term = searchInput.value.toLowerCase();
+
+  if (!term) {
+    renderTable(students);
+    return;
+  }
+
+  const filtered = students.filter(student =>
+    student.name.toLowerCase().includes(term)
+  );
+
+  renderTable(filtered);
+
 }
 
 /**
@@ -139,7 +235,21 @@ function handleSearch(event) {
  * 6. After sorting, call `renderTable(students)` to update the view.
  */
 function handleSort(event) {
-  // ... your implementation here ...
+  // ... your implementation here ...  const index = event.currentTarget.cellIndex;
+  const key = ['name', 'id', 'email'][index];
+  const dir = event.currentTarget.dataset.sortDir === 'asc' ? 'desc' : 'asc';
+  event.currentTarget.dataset.sortDir = dir;
+
+  students.sort((a, b) => {
+    if (key === 'id') {
+      return dir === 'asc' ? a.id - b.id : b.id - a.id;
+    } else {
+      return dir === 'asc' ? a[key].localeCompare(b[key]) : b[key].localeCompare(a[key]);
+    }
+  });
+
+  renderTable(students);
+
 }
 
 /**
@@ -160,7 +270,23 @@ function handleSort(event) {
  */
 async function loadStudentsAndInitialize() {
   // ... your implementation here ...
+   try {
+    const response = await fetch('students.json');
+    if (!response.ok) throw new Error('Failed to fetch students.json');
+
+    students = await response.json();
+    renderTable(students);
+
+    addStudentForm.addEventListener('submit', handleAddStudent);
+    changePasswordForm.addEventListener('submit', handleChangePassword);
+    studentTableBody.addEventListener('click', handleTableClick);
+    searchInput.addEventListener('input', handleSearch);
+    tableHeaders.forEach(th => th.addEventListener('click', handleSort));
+  } catch (error) {
+    console.error(error);
+  }
 }
+
 
 // --- Initial Page Load ---
 // Call the main async function to start the application.

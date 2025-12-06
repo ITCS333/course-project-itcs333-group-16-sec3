@@ -1,57 +1,48 @@
- // --- Element Selection ---
-const listSection = document.querySelector('#weekly-list');
+// list.js أو details.js
+const apiBase = 'api/index.php';
 
-/**
- * Create an <article> for a week entry
- * @param {Object} week - {id, title, startDate, description}
- * @returns {HTMLElement}
- */
-function createWeekArticle(week) {
-    const article = document.createElement('article');
 
-    const h2 = document.createElement('h2');
-    h2.textContent = week.title;
-    article.appendChild(h2);
-
-    const pDate = document.createElement('p');
-    pDate.textContent = `Starts on: ${week.startDate}`;
-    article.appendChild(pDate);
-
-    const pDesc = document.createElement('p');
-    pDesc.textContent = week.description;
-    article.appendChild(pDesc);
-
-    const link = document.createElement('a');
-    link.href = `details.html?id=${week.id}`;
-    link.textContent = 'View Details & Discussion';
-    article.appendChild(link);
-
-    return article;
+async function fetchWeeks() { 
+  const r = await fetch(`${apiBase}?action=weeks`); 
+  return await r.json(); 
 }
 
-/**
- * Load weeks from JSON and populate the page
- */
-async function loadWeeks() {
-    try {
-        const res = await fetch('weeks.json');
-        if (!res.ok) throw new Error('Failed to load weeks.json');
-        const weeks = await res.json();
-
-        listSection.innerHTML = '';
-        weeks.forEach(week => {
-            const article = createWeekArticle(week);
-            listSection.appendChild(article);
-        });
-
-    } catch (error) {
-        console.error('Error loading weeks:', error);
-        listSection.innerHTML = '<p>Failed to load weekly breakdown. Please try again later.</p>';
-    }
+function escapeHtml(s){ 
+  if(!s) return ''; 
+  return s.replaceAll('&','&amp;')
+          .replaceAll('<','&lt;')
+          .replaceAll('>','&gt;'); 
 }
 
-// --- Initial Load ---
-loadWeeks();
+async function render() {
+  const weeks = await fetchWeeks();
+  const container = document.getElementById('weeksList');
+  if (!weeks || weeks.length === 0) { 
+    container.innerHTML = '<p>No weeks available yet.</p>'; 
+    return; 
+  }
+
+  const search = (document.getElementById('search').value || '').toLowerCase();
+  const filtered = weeks.filter(w => (w.title + ' ' + (w.description||'')).toLowerCase().includes(search));
+  filtered.sort((a,b)=> (a.startDate||'').localeCompare(b.startDate||''));
+
+  container.innerHTML = filtered.map(w => `
+    <article class="card">
+      <header>
+        <strong>${escapeHtml(w.title)}</strong> 
+        <span class="small">- ${escapeHtml(w.startDate||'')}</span>
+      </header>
+      <p>${escapeHtml((w.description||'').slice(0,250))}${(w.description||'').length > 250 ? '...' : ''}</p>
+      <menu><a href="details.html?id=${encodeURIComponent(w.id)}">Details</a></menu>
+    </article>
+  `).join('');
+}
+
+document.getElementById('search').addEventListener('input', render);
+render();
+
+
+
 
 
 

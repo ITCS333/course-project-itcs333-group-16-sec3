@@ -1,24 +1,24 @@
- <!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weekly Course Breakdown</title>
-    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@2.0.6/css/pico.min.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Weeks - Course Page</title>
+  <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@2.0.6/css/pico.min.css">
+  <style> body { direction: rtl; } </style>
 </head>
 <body>
+  <main class="container">
+    <h1>Weekly Course Preparation</h1>
+    <p>Display all weeks — click any week to see details.</p>
 
-    <header>
-        <h1>Weekly Course Breakdown</h1>
-    </header>
+    <input id="search" placeholder="Search in titles or descriptions..." />
 
-    <main>
-        <section id="weekly-list">
-            <!-- Weeks will be dynamically inserted here -->
-        </section>
-    </main>
+    <div id="weeksList"></div>
+  </main>
 
-    <script src="list.js"></script>
+  <script src="list.js"></script>
 </body>
 </html>
+
 

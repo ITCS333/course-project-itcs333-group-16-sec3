@@ -1,61 +1,48 @@
- <!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Weekly Breakdown</title>
-    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@2.0.6/css/pico.min.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin - Weekly Breakdown</title>
+  <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@2.0.6/css/pico.min.css">
+  <style>
+    body { direction: rtl; }
+    .links-list { font-size: 0.95rem; }
+    .small { font-size: 0.9rem; }
+  </style>
 </head>
 <body>
-    <header>
-        <h1>Manage Weekly Breakdown</h1>
-    </header>
+  <main class="container">
+    <h1>Weekly Management (Admin)</h1>
+    <section id="createSection">
+      <h2>Add New Week</h2>
+      <form id="weekForm">
+        <label>Title
+          <input id="title" required />
+        </label>
+        <label>Start Date
+          <input id="startDate" type="date" />
+        </label>
+        <label>Description
+          <textarea id="description"></textarea>
+        </label>
+        <label>Links (one URL per line)
+          <textarea id="links"></textarea>
+        </label>
+        <button type="submit">Save Week</button>
+      </form>
+    </section>
 
-    <main>
-        <!-- Add/Edit Week Form -->
-        <section>
-            <h2>Add / Edit Week</h2>
-            <form id="week-form" action="#">
-                <fieldset>
-                    <legend>Weekly Details</legend>
-                    <input type="hidden" id="week-id">
-                    <label for="week-title">Week Title</label>
-                    <input type="text" id="week-title" placeholder="Week 1: Introduction to HTML" required>
+    <hr>
 
-                    <label for="week-start-date">Start Date</label>
-                    <input type="date" id="week-start-date" required>
+    <section>
+      <h2>Weeks List</h2>
+      <div id="weeksContainer"></div>
+    </section>
+  </main>
 
-                    <label for="week-description">Description / Notes</label>
-                    <textarea id="week-description" rows="5" placeholder="Enter week description..."></textarea>
-
-                    <label for="week-links">Resource Links (one per line)</label>
-                    <textarea id="week-links" rows="3" placeholder="https://example.com/exercise1"></textarea>
-
-                    <button id="save-week" type="submit">Save Week</button>
-                    <button id="cancel-edit" type="button">Cancel Edit</button>
-                </fieldset>
-            </form>
-        </section>
-
-        <!-- Existing Weeks Table -->
-        <section>
-            <h2>Current Weekly Breakdown</h2>
-            <table id="weeks-table">
-                <thead>
-                    <tr>
-                        <th>Week Title</th>
-                        <th>Description</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="weeks-tbody">
-                    <!-- JS will populate rows -->
-                </tbody>
-            </table>
-        </section>
-    </main>
-
-    <script src="admin.js"></script>
+  <script src="admin.js"></script>
 </body>
 </html>
+
 

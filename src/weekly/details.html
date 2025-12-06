@@ -1,43 +1,35 @@
-  <!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Week Details</title>
-    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@2.0.6/css/pico.min.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Week Details</title>
+  <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@2.0.6/css/pico.min.css">
+  <style> body { direction: rtl; } </style>
 </head>
 <body>
-    <header>
-        <h1 id="week-title">Loading...</h1>
-        <p id="week-start-date"></p>
-    </header>
+  <main class="container">
+    <a href="list.html">&larr; Back</a>
+    <h1 id="title">Week Details</h1>
+    <p id="startDate"></p>
+    <section id="description"></section>
+    <section id="links"></section>
 
-    <main>
-        <!-- Description & Links -->
-        <section>
-            <h2>Description & Notes</h2>
-            <p id="week-description"></p>
+    <hr>
+    <section>
+      <h2>Comments</h2>
+      <div id="commentsList"></div>
 
-            <h2>Resources & Exercises</h2>
-            <ul id="week-links-list"></ul>
-        </section>
+      <form id="commentForm">
+        <label>Add a comment
+          <textarea id="commentText" required></textarea>
+        </label>
+        <button type="submit">Submit</button>
+      </form>
+    </section>
+  </main>
 
-        <!-- Discussion / Comments -->
-        <section id="discussion-forum">
-            <h2>Discussion</h2>
-            <div id="comment-list"></div>
-
-            <form id="comment-form" action="#">
-                <fieldset>
-                    <legend>Post a Comment</legend>
-                    <label for="new-comment-text">Your Comment:</label>
-                    <textarea id="new-comment-text" rows="3" required></textarea>
-                    <button type="submit">Post Comment</button>
-                </fieldset>
-            </form>
-        </section>
-    </main>
-
-    <script src="details.js"></script>
+  <script src="details.js"></script>
 </body>
 </html>
+

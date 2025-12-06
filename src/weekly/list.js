@@ -1,47 +1,48 @@
-/*
-  Requirement: Populate the "Weekly Course Breakdown" list page.
+// list.js أو details.js
+const apiBase = 'api/index.php';
 
-  Instructions:
-  1. Link this file to `list.html` using:
-     <script src="list.js" defer></script>
 
-  2. In `list.html`, add an `id="week-list-section"` to the
-     <section> element that will contain the weekly articles.
-
-  3. Implement the TODOs below.
-*/
-
-// --- Element Selections ---
-// TODO: Select the section for the week list ('#week-list-section').
-
-// --- Functions ---
-
-/**
- * TODO: Implement the createWeekArticle function.
- * It takes one week object {id, title, startDate, description}.
- * It should return an <article> element matching the structure in `list.html`.
- * - The "View Details & Discussion" link's `href` MUST be set to `details.html?id=${id}`.
- * (This is how the detail page will know which week to load).
- */
-function createWeekArticle(week) {
-  // ... your implementation here ...
+async function fetchWeeks() { 
+  const r = await fetch(`${apiBase}?action=weeks`); 
+  return await r.json(); 
 }
 
-/**
- * TODO: Implement the loadWeeks function.
- * This function needs to be 'async'.
- * It should:
- * 1. Use `fetch()` to get data from 'weeks.json'.
- * 2. Parse the JSON response into an array.
- * 3. Clear any existing content from `listSection`.
- * 4. Loop through the weeks array. For each week:
- * - Call `createWeekArticle()`.
- * - Append the returned <article> element to `listSection`.
- */
-async function loadWeeks() {
-  // ... your implementation here ...
+function escapeHtml(s){ 
+  if(!s) return ''; 
+  return s.replaceAll('&','&amp;')
+          .replaceAll('<','&lt;')
+          .replaceAll('>','&gt;'); 
 }
 
-// --- Initial Page Load ---
-// Call the function to populate the page.
-loadWeeks();
+async function render() {
+  const weeks = await fetchWeeks();
+  const container = document.getElementById('weeksList');
+  if (!weeks || weeks.length === 0) { 
+    container.innerHTML = '<p>No weeks available yet.</p>'; 
+    return; 
+  }
+
+  const search = (document.getElementById('search').value || '').toLowerCase();
+  const filtered = weeks.filter(w => (w.title + ' ' + (w.description||'')).toLowerCase().includes(search));
+  filtered.sort((a,b)=> (a.startDate||'').localeCompare(b.startDate||''));
+
+  container.innerHTML = filtered.map(w => `
+    <article class="card">
+      <header>
+        <strong>${escapeHtml(w.title)}</strong> 
+        <span class="small">- ${escapeHtml(w.startDate||'')}</span>
+      </header>
+      <p>${escapeHtml((w.description||'').slice(0,250))}${(w.description||'').length > 250 ? '...' : ''}</p>
+      <menu><a href="details.html?id=${encodeURIComponent(w.id)}">Details</a></menu>
+    </article>
+  `).join('');
+}
+
+document.getElementById('search').addEventListener('input', render);
+render();
+
+
+
+
+
+

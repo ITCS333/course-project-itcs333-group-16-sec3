@@ -97,41 +97,30 @@ function isValidPassword(password) {
  */
 function handleLogin(event) {
   // ... your implementation here ...
-event.preventDefault();
+function handleLogin(event) {
+ 
+  event.preventDefault();
+
   const email = emailInput.value.trim();
   const password = passwordInput.value.trim();
-  if(!isValidEmail(email)){
+
+
+  if (!isValidEmail(email)) {
     displayMessage("Invalid email format.", "error");
-    return;
+    return; // stop
   }
-  if(!isValidPassword(password)){
-    displayMessage("Pawword must be at least 8 characters.", "error");
-    return;
+
+
+  if (!isValidPassword(password)) {
+    displayMessage("Password must be at least 8 characters.", "error");
+    return; // stop
   }
-  try {
-    const response = await fetch("api/index.php", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password })
-    });
 
-    const result = await response.json();
-
-    if (!result.success) {
-      displayMessage(result.message, "error");
-      return;
-    }
   displayMessage("Login successful!", "success");
+
   emailInput.value = "";
   passwordInput.value = "";
-  setTimeout(() => {
-      window.location.href = "../admin/manage_users.html";
-    }, 1000);
-
-  } catch (error) {
-    console.error("Login error:", error);
-    displayMessage("Something went wrong.", "error");
-  } 
+}
 
 }
 

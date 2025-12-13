@@ -1,4 +1,11 @@
 <?php
+/******************** SESSION (REQUIRED) ********************/
+session_start();
+
+if (!isset($_SESSION['discussion_user'])) {
+    $_SESSION['discussion_user'] = 'guest';
+}
+
 /**
  * Discussion Board API
  * 
@@ -11,36 +18,20 @@
  * Table: topics
  * Columns:
  *   - id (INT, PRIMARY KEY, AUTO_INCREMENT)
- *   - topic_id (VARCHAR(50), UNIQUE) - The topic's unique identifier (e.g., "topic_1234567890")
- *   - subject (VARCHAR(255)) - The topic subject/title
- *   - message (TEXT) - The main topic message
- *   - author (VARCHAR(100)) - The author's name
- *   - created_at (TIMESTAMP) - When the topic was created
+ *   - topic_id (VARCHAR(50), UNIQUE)
+ *   - subject (VARCHAR(255))
+ *   - message (TEXT)
+ *   - author (VARCHAR(100))
+ *   - created_at (TIMESTAMP)
  * 
  * Table: replies
  * Columns:
  *   - id (INT, PRIMARY KEY, AUTO_INCREMENT)
- *   - reply_id (VARCHAR(50), UNIQUE) - The reply's unique identifier (e.g., "reply_1234567890")
- *   - topic_id (VARCHAR(50)) - Foreign key to topics.topic_id
- *   - text (TEXT) - The reply message
- *   - author (VARCHAR(100)) - The reply author's name
- *   - created_at (TIMESTAMP) - When the reply was created
- * 
- * API Endpoints:
- * 
- * Topics:
- *   GET    /api/discussion.php?resource=topics              - Get all topics (with optional search)
- *   GET    /api/discussion.php?resource=topics&id={id}      - Get single topic
- *   POST   /api/discussion.php?resource=topics              - Create new topic
- *   PUT    /api/discussion.php?resource=topics              - Update a topic
- *   DELETE /api/discussion.php?resource=topics&id={id}      - Delete a topic
- * 
- * Replies:
- *   GET    /api/discussion.php?resource=replies&topic_id={id} - Get all replies for a topic
- *   POST   /api/discussion.php?resource=replies              - Create new reply
- *   DELETE /api/discussion.php?resource=replies&id={id}      - Delete a reply
- * 
- * Response Format: JSON
+ *   - reply_id (VARCHAR(50), UNIQUE)
+ *   - topic_id (VARCHAR(50))
+ *   - text (TEXT)
+ *   - author (VARCHAR(100))
+ *   - created_at (TIMESTAMP)
  */
 
 // -------------------- HEADERS & CORS --------------------
@@ -108,8 +99,7 @@ function getAllTopics($db) {
     foreach ($params as $k => $v) $stmt->bindValue($k, $v);
     $stmt->execute();
 
-    $rows = $stmt->fetchAll();
-    sendResponse($rows);
+    sendResponse($stmt->fetchAll());
 }
 
 function getTopicById($db, $topicId) {
@@ -118,206 +108,131 @@ function getTopicById($db, $topicId) {
     $stmt = $db->prepare("SELECT topic_id, subject, message, author, created_at FROM topics WHERE topic_id = :id LIMIT 1");
     $stmt->bindValue(':id', $topicId);
     $stmt->execute();
-    $row = $stmt->fetch();
 
+    $row = $stmt->fetch();
     if (!$row) sendResponse(['error' => 'Topic not found'], 404);
+
     sendResponse($row);
 }
 
 function createTopic($db, $data) {
-    foreach (['topic_id', 'subject', 'message', 'author'] as $field) {
-        if (empty($data[$field])) sendResponse(['error' => "$field is required"], 400);
+    foreach (['topic_id','subject','message','author'] as $f) {
+        if (empty($data[$f])) sendResponse(['error'=>"$f is required"],400);
     }
 
-    $topic_id = sanitizeInput($data['topic_id']);
-    $subject = sanitizeInput($data['subject']);
-    $message = sanitizeInput($data['message']);
-    $author = sanitizeInput($data['author']);
+    $stmt = $db->prepare(
+        "INSERT INTO topics (topic_id, subject, message, author, created_at)
+         VALUES (:id,:subject,:message,:author,CURRENT_TIMESTAMP)"
+    );
 
-    $stmt = $db->prepare("SELECT topic_id FROM topics WHERE topic_id = :id");
-    $stmt->bindValue(':id', $topic_id);
-    $stmt->execute();
-    if ($stmt->fetch()) sendResponse(['error' => 'Topic ID already exists'], 409);
+    $stmt->execute([
+        ':id'      => sanitizeInput($data['topic_id']),
+        ':subject' => sanitizeInput($data['subject']),
+        ':message' => sanitizeInput($data['message']),
+        ':author'  => sanitizeInput($data['author'])
+    ]);
 
-    $stmt = $db->prepare("INSERT INTO topics (topic_id, subject, message, author, created_at) VALUES (:id, :subject, :message, :author, CURRENT_TIMESTAMP)");
-    $stmt->bindValue(':id', $topic_id);
-    $stmt->bindValue(':subject', $subject);
-    $stmt->bindValue(':message', $message);
-    $stmt->bindValue(':author', $author);
-
-    try {
-        $stmt->execute();
-        sendResponse(['message' => 'Topic created', 'topic_id' => $topic_id], 201);
-    } catch (PDOException $e) {
-        sendResponse(['error' => 'Failed to create topic', 'details' => $e->getMessage()], 500);
-    }
+    sendResponse(['message'=>'Topic created'],201);
 }
 
 function updateTopic($db, $data) {
-    if (empty($data['topic_id'])) sendResponse(['error' => 'topic_id required'], 400);
+    if (empty($data['topic_id'])) sendResponse(['error'=>'topic_id required'],400);
 
-    $stmt = $db->prepare("SELECT topic_id FROM topics WHERE topic_id = :id");
-    $stmt->bindValue(':id', $data['topic_id']);
-    $stmt->execute();
-    if (!$stmt->fetch()) sendResponse(['error' => 'Topic not found'], 404);
+    $stmt = $db->prepare(
+        "UPDATE topics SET subject=:subject, message=:message WHERE topic_id=:id"
+    );
 
-    $fields = [];
-    $params = [':id' => $data['topic_id']];
+    $stmt->execute([
+        ':id'      => $data['topic_id'],
+        ':subject' => sanitizeInput($data['subject']),
+        ':message' => sanitizeInput($data['message'])
+    ]);
 
-    if (isset($data['subject'])) { $fields[] = "subject = :subject"; $params[':subject'] = sanitizeInput($data['subject']); }
-    if (isset($data['message'])) { $fields[] = "message = :message"; $params[':message'] = sanitizeInput($data['message']); }
-
-    if (!$fields) sendResponse(['error' => 'No fields to update'], 400);
-
-    $sql = "UPDATE topics SET " . implode(', ', $fields) . " WHERE topic_id = :id";
-    $stmt = $db->prepare($sql);
-    foreach ($params as $k => $v) $stmt->bindValue($k, $v);
-
-    try {
-        $stmt->execute();
-        sendResponse(['message' => 'Topic updated']);
-    } catch (PDOException $e) {
-        sendResponse(['error' => 'Failed to update topic', 'details' => $e->getMessage()], 500);
-    }
+    sendResponse(['message'=>'Topic updated']);
 }
 
 function deleteTopic($db, $topicId) {
-    if (!$topicId) sendResponse(['error' => 'topic_id required'], 400);
+    if (!$topicId) sendResponse(['error'=>'topic_id required'],400);
 
-    $stmt = $db->prepare("SELECT topic_id FROM topics WHERE topic_id = :id");
-    $stmt->bindValue(':id', $topicId);
-    $stmt->execute();
-    if (!$stmt->fetch()) sendResponse(['error' => 'Topic not found'], 404);
+    $db->prepare("DELETE FROM replies WHERE topic_id=:id")->execute([':id'=>$topicId]);
+    $db->prepare("DELETE FROM topics WHERE topic_id=:id")->execute([':id'=>$topicId]);
 
-    try {
-        $db->beginTransaction();
-        $stmt1 = $db->prepare("DELETE FROM replies WHERE topic_id = :id");
-        $stmt1->bindValue(':id', $topicId);
-        $stmt1->execute();
-
-        $stmt2 = $db->prepare("DELETE FROM topics WHERE topic_id = :id");
-        $stmt2->bindValue(':id', $topicId);
-        $stmt2->execute();
-        $db->commit();
-
-        sendResponse(['message' => 'Topic and replies deleted']);
-    } catch (PDOException $e) {
-        $db->rollBack();
-        sendResponse(['error' => 'Failed to delete topic', 'details' => $e->getMessage()], 500);
-    }
+    sendResponse(['message'=>'Topic deleted']);
 }
 
-// ======================= REPLIES FUNCTIONS =======================
+// ======================= REPLIES =======================
+
 function getRepliesByTopicId($db, $topicId) {
-    if (!$topicId) sendResponse(['error' => 'topic_id required'], 400);
+    if (!$topicId) sendResponse(['error'=>'topic_id required'],400);
 
-    $stmt = $db->prepare("SELECT reply_id, topic_id, text, author, created_at FROM replies WHERE topic_id = :id ORDER BY created_at ASC");
-    $stmt->bindValue(':id', $topicId);
-    $stmt->execute();
+    $stmt = $db->prepare(
+        "SELECT reply_id, text, author, created_at FROM replies WHERE topic_id=:id"
+    );
+    $stmt->execute([':id'=>$topicId]);
 
-    $rows = $stmt->fetchAll();
-    sendResponse($rows);
+    sendResponse($stmt->fetchAll());
 }
 
 function createReply($db, $data) {
-    foreach (['reply_id','topic_id','text','author'] as $field) {
-        if (empty($data[$field])) sendResponse(['error' => "$field is required"], 400);
+    foreach (['reply_id','topic_id','text','author'] as $f) {
+        if (empty($data[$f])) sendResponse(['error'=>"$f is required"],400);
     }
 
-    $reply_id = sanitizeInput($data['reply_id']);
-    $topic_id = sanitizeInput($data['topic_id']);
-    $text = sanitizeInput($data['text']);
-    $author = sanitizeInput($data['author']);
+    $stmt = $db->prepare(
+        "INSERT INTO replies (reply_id, topic_id, text, author, created_at)
+         VALUES (:rid,:tid,:text,:author,CURRENT_TIMESTAMP)"
+    );
 
-    $stmt = $db->prepare("SELECT topic_id FROM topics WHERE topic_id = :id");
-    $stmt->bindValue(':id', $topic_id);
-    $stmt->execute();
-    if (!$stmt->fetch()) sendResponse(['error' => 'Parent topic not found'], 404);
+    $stmt->execute([
+        ':rid'    => sanitizeInput($data['reply_id']),
+        ':tid'    => sanitizeInput($data['topic_id']),
+        ':text'   => sanitizeInput($data['text']),
+        ':author' => sanitizeInput($data['author'])
+    ]);
 
-    $stmt = $db->prepare("SELECT reply_id FROM replies WHERE reply_id = :id");
-    $stmt->bindValue(':id', $reply_id);
-    $stmt->execute();
-    if ($stmt->fetch()) sendResponse(['error' => 'Reply ID already exists'], 409);
-
-    $stmt = $db->prepare("INSERT INTO replies (reply_id, topic_id, text, author, created_at) VALUES (:id, :tid, :text, :author, CURRENT_TIMESTAMP)");
-    $stmt->bindValue(':id', $reply_id);
-    $stmt->bindValue(':tid', $topic_id);
-    $stmt->bindValue(':text', $text);
-    $stmt->bindValue(':author', $author);
-
-    try {
-        $stmt->execute();
-        sendResponse(['message' => 'Reply created', 'reply_id' => $reply_id], 201);
-    } catch (PDOException $e) {
-        sendResponse(['error' => 'Failed to create reply', 'details' => $e->getMessage()], 500);
-    }
+    sendResponse(['message'=>'Reply created'],201);
 }
 
 function deleteReply($db, $replyId) {
-    if (!$replyId) sendResponse(['error' => 'reply_id required'], 400);
+    if (!$replyId) sendResponse(['error'=>'reply_id required'],400);
 
-    $stmt = $db->prepare("SELECT reply_id FROM replies WHERE reply_id = :id");
-    $stmt->bindValue(':id', $replyId);
-    $stmt->execute();
-    if (!$stmt->fetch()) sendResponse(['error' => 'Reply not found'], 404);
-
-    $stmt = $db->prepare("DELETE FROM replies WHERE reply_id = :id");
-    $stmt->bindValue(':id', $replyId);
-    try {
-        $stmt->execute();
-        sendResponse(['message' => 'Reply deleted']);
-    } catch (PDOException $e) {
-        sendResponse(['error' => 'Failed to delete reply', 'details' => $e->getMessage()], 500);
-    }
+    $db->prepare("DELETE FROM replies WHERE reply_id=:id")->execute([':id'=>$replyId]);
+    sendResponse(['message'=>'Reply deleted']);
 }
 
 // ======================= ROUTER =======================
-try {
-    if ($method === 'GET') {
-        if ($resource === 'topics') {
-            if (!empty($_GET['id'])) getTopicById($db, $_GET['id']);
-            else getAllTopics($db);
-        } elseif ($resource === 'replies') {
-            if (!empty($_GET['topic_id'])) getRepliesByTopicId($db, $_GET['topic_id']);
-            else sendResponse([], 200);
-        } else sendResponse(['error'=>'Invalid resource'],400);
 
-    } elseif ($method === 'POST') {
-        if ($resource === 'topics') createTopic($db, $body);
-        elseif ($resource === 'replies') createReply($db, $body);
-        else sendResponse(['error'=>'Invalid resource for POST'],400);
-
-    } elseif ($method === 'PUT' || $method === 'PATCH') {
-        if ($resource === 'topics') updateTopic($db, $body);
-        else sendResponse(['error'=>'PUT not supported for this resource'],400);
-
-    } elseif ($method === 'DELETE') {
-        $id = $_GET['id'] ?? ($body['id'] ?? null);
-        if ($resource === 'topics') deleteTopic($db, $id);
-        elseif ($resource === 'replies') deleteReply($db, $id);
-        else sendResponse(['error'=>'Invalid resource for DELETE'],400);
-
-    } else sendResponse(['error'=>'Method not supported'],405);
-
-} catch (PDOException $e) {
-    sendResponse(['error'=>'Database error','details'=>$e->getMessage()],500);
-} catch (Exception $e) {
-    sendResponse(['error'=>'Server error','details'=>$e->getMessage()],500);
+if ($method === 'GET') {
+    if ($resource === 'topics') {
+        isset($_GET['id']) ? getTopicById($db,$_GET['id']) : getAllTopics($db);
+    } elseif ($resource === 'replies') {
+        getRepliesByTopicId($db,$_GET['topic_id'] ?? null);
+    }
 }
 
-// ======================= HELPER FUNCTIONS =======================
-function sendResponse($data, $statusCode=200) {
-    http_response_code($statusCode);
-    if (!is_array($data)) $data=['message'=> (string)$data];
-    echo json_encode($data, JSON_UNESCAPED_UNICODE);
+elseif ($method === 'POST') {
+    if ($resource === 'topics') createTopic($db,$body);
+    elseif ($resource === 'replies') createReply($db,$body);
+}
+
+elseif ($method === 'PUT' || $method === 'PATCH') {
+    if ($resource === 'topics') updateTopic($db,$body);
+}
+
+elseif ($method === 'DELETE') {
+    $id = $_GET['id'] ?? null;
+    if ($resource === 'topics') deleteTopic($db,$id);
+    elseif ($resource === 'replies') deleteReply($db,$id);
+}
+
+function sendResponse($data,$code=200){
+    http_response_code($code);
+    echo json_encode($data,JSON_UNESCAPED_UNICODE);
     exit;
 }
 
-function sanitizeInput($data) {
-    if (!is_string($data)) return $data;
-    $s = trim($data);
-    $s = strip_tags($s);
-    return htmlspecialchars($s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+function sanitizeInput($v){
+    return htmlspecialchars(strip_tags(trim($v)),ENT_QUOTES,'UTF-8');
 }
 
 function isValidResource($resource) {

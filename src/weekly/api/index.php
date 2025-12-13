@@ -1,13 +1,9 @@
  <?php
 // index.php
 // API for Task 3: Weekly Breakdown (uses weeks.json and comments.json)
-// Integrate with your Task 1 login: session must have ['user'] and ['role'] ('admin' for teacher).
-header('Content-Type: application/json; charset=utf-8');
-session_start();
 
-// --- DEBUG / DEV: temporary way to simulate login while Task1 not ready ---
-// Uncomment for local testing only (remove/comment in production):
-// $_SESSION['user'] = 'Teacher'; $_SESSION['role'] = 'admin';
+session_start();
+header('Content-Type: application/json; charset=utf-8');
 
 // Paths
 $WEEKS_FILE = __DIR__ . '/weeks.json';
@@ -17,9 +13,9 @@ $COMMENTS_FILE = __DIR__ . '/comments.json';
 function read_json_file($path) {
     if (!file_exists($path)) return null;
     $text = file_get_contents($path);
-    $data = json_decode($text, true);
-    return $data;
+    return json_decode($text, true);
 }
+
 function write_json_file($path, $data) {
     $tmp = $path . '.tmp';
     $fp = fopen($tmp, 'w');
@@ -32,6 +28,7 @@ function write_json_file($path, $data) {
     rename($tmp, $path);
     return true;
 }
+
 function require_admin() {
     if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
         http_response_code(403);
@@ -39,6 +36,7 @@ function require_admin() {
         exit;
     }
 }
+
 function require_login() {
     if (!isset($_SESSION['user'])) {
         http_response_code(401);
@@ -47,68 +45,92 @@ function require_login() {
     }
 }
 
-// Routing by "action" param
+// Routing
 $action = $_GET['action'] ?? $_POST['action'] ?? null;
 $method = $_SERVER['REQUEST_METHOD'];
 
+// List weeks
 if ($action === 'weeks' && $method === 'GET') {
-    $weeks = read_json_file($WEEKS_FILE);
-    if ($weeks === null) $weeks = [];
+    $weeks = read_json_file($WEEKS_FILE) ?? [];
     echo json_encode($weeks);
     exit;
 }
 
+// Get single week
 if ($action === 'week' && $method === 'GET') {
     $id = $_GET['id'] ?? null;
     $weeks = read_json_file($WEEKS_FILE) ?? [];
     foreach ($weeks as $w) {
-        if ($w['id'] === $id) { echo json_encode($w); exit; }
+        if ((string)$w['id'] === (string)$id) {
+            echo json_encode($w);
+            exit;
+        }
     }
-    http_response_code(404); echo json_encode(['error' => 'Not found']); exit;
+    http_response_code(404);
+    echo json_encode(['error' => 'Not found']);
+    exit;
 }
 
-// Create new week
+// Create week
 if ($action === 'week_create' && $method === 'POST') {
     require_admin();
     $input = json_decode(file_get_contents('php://input'), true);
-    if (!$input) { http_response_code(400); echo json_encode(['error'=>'bad input']); exit; }
+    if ($input === null) {
+        http_response_code(400);
+        echo json_encode(['error' => 'bad input']);
+        exit;
+    }
+
     $weeks = read_json_file($WEEKS_FILE) ?? [];
 
-    // validate fields
     $title = trim($input['title'] ?? '');
     $startDate = trim($input['startDate'] ?? '');
     $description = trim($input['description'] ?? '');
     $links = is_array($input['links'] ?? null) ? $input['links'] : [];
 
-    if ($title === '') { http_response_code(400); echo json_encode(['error'=>'title required']); exit; }
+    if ($title === '') {
+        http_response_code(400);
+        echo json_encode(['error' => 'title required']);
+        exit;
+    }
 
-    // generate id
-    $id = 'week_' . (count($weeks) + 1) . '_' . time();
     $new = [
-        'id' => $id,
+        'id' => 'week_' . (count($weeks) + 1) . '_' . time(),
         'title' => $title,
         'startDate' => $startDate,
         'description' => $description,
         'links' => $links
     ];
+
     $weeks[] = $new;
+
     if (write_json_file($WEEKS_FILE, $weeks)) {
-        echo json_encode($new); exit;
-    } else {
-        http_response_code(500); echo json_encode(['error'=>'write failed']); exit;
+        echo json_encode($new);
+        exit;
     }
+
+    http_response_code(500);
+    echo json_encode(['error' => 'write failed']);
+    exit;
 }
 
-// Update existing week
-if ($action === 'week_update' && in_array($method, ['POST','PUT'])) {
+// Update week
+if ($action === 'week_update' && in_array($method, ['POST', 'PUT'])) {
     require_admin();
-    $id = $_GET['id'] ?? null;
     $input = json_decode(file_get_contents('php://input'), true);
-    if (!$input || !$id) { http_response_code(400); echo json_encode(['error'=>'bad input']); exit; }
+    $id = $_GET['id'] ?? ($input['id'] ?? null);
+
+    if ($input === null || !$id) {
+        http_response_code(400);
+        echo json_encode(['error' => 'bad input']);
+        exit;
+    }
+
     $weeks = read_json_file($WEEKS_FILE) ?? [];
     $found = false;
+
     foreach ($weeks as &$w) {
-        if ($w['id'] === $id) {
+        if ((string)$w['id'] === (string)$id) {
             $w['title'] = $input['title'] ?? $w['title'];
             $w['startDate'] = $input['startDate'] ?? $w['startDate'];
             $w['description'] = $input['description'] ?? $w['description'];
@@ -117,131 +139,206 @@ if ($action === 'week_update' && in_array($method, ['POST','PUT'])) {
             break;
         }
     }
-    if (!$found) { http_response_code(404); echo json_encode(['error'=>'not found']); exit; }
-    if (write_json_file($WEEKS_FILE, $weeks)) { echo json_encode(['ok'=>true]); exit; }
-    http_response_code(500); echo json_encode(['error'=>'write failed']); exit;
+
+    if (!$found) {
+        http_response_code(404);
+        echo json_encode(['error' => 'not found']);
+        exit;
+    }
+
+    if (write_json_file($WEEKS_FILE, $weeks)) {
+        echo json_encode(['ok' => true]);
+        exit;
+    }
+
+    http_response_code(500);
+    echo json_encode(['error' => 'write failed']);
+    exit;
 }
 
 // Delete week
-if ($action === 'week_delete' && $method === 'POST') {
+if ($action === 'week_delete' && in_array($method, ['POST', 'DELETE'])) {
     require_admin();
     $id = $_GET['id'] ?? null;
-    if (!$id) { http_response_code(400); echo json_encode(['error'=>'id required']); exit; }
+
+    if (!$id) {
+        http_response_code(400);
+        echo json_encode(['error' => 'id required']);
+        exit;
+    }
+
     $weeks = read_json_file($WEEKS_FILE) ?? [];
     $new = [];
     $found = false;
+
     foreach ($weeks as $w) {
-        if ($w['id'] === $id) { $found = true; continue; }
+        if ((string)$w['id'] === (string)$id) {
+            $found = true;
+            continue;
+        }
         $new[] = $w;
     }
-    if (!$found) { http_response_code(404); echo json_encode(['error'=>'not found']); exit; }
 
-    if (!write_json_file($WEEKS_FILE, $new)) { http_response_code(500); echo json_encode(['error'=>'write failed']); exit; }
+    if (!$found) {
+        http_response_code(404);
+        echo json_encode(['error' => 'not found']);
+        exit;
+    }
 
-    // also remove comments for that week
+    write_json_file($WEEKS_FILE, $new);
+
     $comments = read_json_file($COMMENTS_FILE) ?? [];
-    if (isset($comments[$id])) { unset($comments[$id]); write_json_file($COMMENTS_FILE, $comments); }
+    if (isset($comments[$id])) {
+        unset($comments[$id]);
+        write_json_file($COMMENTS_FILE, $comments);
+    }
 
-    echo json_encode(['ok'=>true]); exit;
+    echo json_encode(['ok' => true]);
+    exit;
 }
 
-// Comments: list for week
+// List comments
 if ($action === 'comments' && $method === 'GET') {
+    require_login();
     $week_id = $_GET['week_id'] ?? null;
     $comments = read_json_file($COMMENTS_FILE) ?? [];
-    if ($week_id === null) {
-        echo json_encode($comments); exit;
-    }
-    echo json_encode($comments[$week_id] ?? []); exit;
+    echo json_encode($week_id ? ($comments[$week_id] ?? []) : $comments);
+    exit;
 }
 
 // Add comment
 if ($action === 'comment_add' && $method === 'POST') {
     require_login();
     $input = json_decode(file_get_contents('php://input'), true);
-    if (!$input) { http_response_code(400); echo json_encode(['error'=>'bad input']); exit; }
+
+    if ($input === null) {
+        http_response_code(400);
+        echo json_encode(['error' => 'bad input']);
+        exit;
+    }
+
     $week_id = $input['week_id'] ?? null;
     $text = trim($input['text'] ?? '');
-    if (!$week_id || $text === '') { http_response_code(400); echo json_encode(['error'=>'week_id and text required']); exit; }
+
+    if (!$week_id || $text === '') {
+        http_response_code(400);
+        echo json_encode(['error' => 'week_id and text required']);
+        exit;
+    }
 
     $comments = read_json_file($COMMENTS_FILE) ?? [];
     if (!isset($comments[$week_id])) $comments[$week_id] = [];
+
     $entry = [
-        'id' => 'c_' . time() . '_' . rand(1000,9999),
-        'author' => $_SESSION['user'],
+        'id' => 'c_' . time() . '_' . rand(1000, 9999),
         'text' => $text,
+        'author' => $_SESSION['user'],
         'created_at' => date('c')
     ];
+
     $comments[$week_id][] = $entry;
-    if (write_json_file($COMMENTS_FILE, $comments)) { echo json_encode($entry); exit; }
-    http_response_code(500); echo json_encode(['error'=>'write failed']); exit;
+
+    if (write_json_file($COMMENTS_FILE, $comments)) {
+        echo json_encode($entry);
+        exit;
+    }
+
+    http_response_code(500);
+    echo json_encode(['error' => 'write failed']);
+    exit;
 }
 
-// Delete comment (only admin or comment owner)
+// Delete comment
 if ($action === 'comment_delete' && $method === 'POST') {
     require_login();
     $input = json_decode(file_get_contents('php://input'), true);
+
     $week_id = $input['week_id'] ?? null;
     $comment_id = $input['comment_id'] ?? null;
-    if (!$week_id || !$comment_id) { http_response_code(400); echo json_encode(['error'=>'week_id/comment_id required']); exit; }
-    $comments = read_json_file($COMMENTS_FILE) ?? [];
-    if (!isset($comments[$week_id])) { http_response_code(404); echo json_encode(['error'=>'not found']); exit; }
 
-    $found = false;
+    if (!$week_id || !$comment_id) {
+        http_response_code(400);
+        echo json_encode(['error' => 'week_id/comment_id required']);
+        exit;
+    }
+
+    $comments = read_json_file($COMMENTS_FILE) ?? [];
+    if (!isset($comments[$week_id])) {
+        http_response_code(404);
+        echo json_encode(['error' => 'not found']);
+        exit;
+    }
+
     foreach ($comments[$week_id] as $i => $c) {
         if ($c['id'] === $comment_id) {
-            // permission
-            if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
-                // ok
-            } else if (isset($_SESSION['user']) && $_SESSION['user'] === $c['author']) {
-                // ok
-            } else {
-                http_response_code(403); echo json_encode(['error'=>'forbidden']); exit;
+            if (
+                (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') ||
+                ($_SESSION['user'] === $c['author'])
+            ) {
+                array_splice($comments[$week_id], $i, 1);
+                write_json_file($COMMENTS_FILE, $comments);
+                echo json_encode(['ok' => true]);
+                exit;
             }
-            array_splice($comments[$week_id], $i, 1);
-            $found = true;
-            break;
+            http_response_code(403);
+            echo json_encode(['error' => 'forbidden']);
+            exit;
         }
     }
-    if (!$found) { http_response_code(404); echo json_encode(['error'=>'not found']); exit; }
-    if (write_json_file($COMMENTS_FILE, $comments)) { echo json_encode(['ok'=>true]); exit; }
-    http_response_code(500); echo json_encode(['error'=>'write failed']); exit;
+
+    http_response_code(404);
+    echo json_encode(['error' => 'not found']);
+    exit;
 }
 
-// Edit comment (only owner or admin)
+// Edit comment
 if ($action === 'comment_edit' && $method === 'POST') {
     require_login();
     $input = json_decode(file_get_contents('php://input'), true);
+
     $week_id = $input['week_id'] ?? null;
     $comment_id = $input['comment_id'] ?? null;
     $text = trim($input['text'] ?? '');
-    if (!$week_id || !$comment_id || $text === '') { http_response_code(400); echo json_encode(['error'=>'bad input']); exit; }
-    $comments = read_json_file($COMMENTS_FILE) ?? [];
-    if (!isset($comments[$week_id])) { http_response_code(404); echo json_encode(['error'=>'not found']); exit; }
 
-    $found = false;
+    if (!$week_id || !$comment_id || $text === '') {
+        http_response_code(400);
+        echo json_encode(['error' => 'bad input']);
+        exit;
+    }
+
+    $comments = read_json_file($COMMENTS_FILE) ?? [];
+    if (!isset($comments[$week_id])) {
+        http_response_code(404);
+        echo json_encode(['error' => 'not found']);
+        exit;
+    }
+
     foreach ($comments[$week_id] as $i => $c) {
         if ($c['id'] === $comment_id) {
-            if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
-                // ok
-            } else if (isset($_SESSION['user']) && $_SESSION['user'] === $c['author']) {
-                // ok
-            } else {
-                http_response_code(403); echo json_encode(['error'=>'forbidden']); exit;
+            if (
+                (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') ||
+                ($_SESSION['user'] === $c['author'])
+            ) {
+                $comments[$week_id][$i]['text'] = $text;
+                $comments[$week_id][$i]['edited_at'] = date('c');
+                write_json_file($COMMENTS_FILE, $comments);
+                echo json_encode(['ok' => true]);
+                exit;
             }
-            $comments[$week_id][$i]['text'] = $text;
-            $comments[$week_id][$i]['edited_at'] = date('c');
-            $found = true;
-            break;
+            http_response_code(403);
+            echo json_encode(['error' => 'forbidden']);
+            exit;
         }
     }
-    if (!$found) { http_response_code(404); echo json_encode(['error'=>'not found']); exit; }
-    if (write_json_file($COMMENTS_FILE, $comments)) { echo json_encode(['ok'=>true]); exit; }
-    http_response_code(500); echo json_encode(['error'=>'write failed']); exit;
+
+    http_response_code(404);
+    echo json_encode(['error' => 'not found']);
+    exit;
 }
 
-// default: invalid
-http_response_code(400);
-echo json_encode(['error'=>'invalid action']);
+// Invalid action
+http_response_code(404);
+echo json_encode(['error' => 'invalid action']);
 exit;
+
 

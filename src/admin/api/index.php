@@ -24,6 +24,19 @@
  * Response Format: JSON
  */
 
+<?php
+session_start();
+
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
+    http_response_code(403);
+    echo json_encode([
+        "success" => false,
+        "message" => "Access denied"
+    ]);
+    exit;
+}
+
+
 // TODO: Set headers for JSON response and CORS
 // Set Content-Type to application/json
 // Allow cross-origin requests (CORS) if needed
@@ -575,15 +588,11 @@ try {
  */
 function sendResponse($data, $statusCode = 200) {
     // TODO: Set HTTP response code
-    
+      http_response_code($statusCode);
     // TODO: Echo JSON encoded data
-    
+     echo json_encode($data);
     // TODO: Exit to prevent further execution
-    function sendResponse($data, $statusCode = 200) {
-    http_response_code($statusCode);
-    echo json_encode($data);
     exit;
-}
 
 }
 
@@ -597,9 +606,8 @@ function sendResponse($data, $statusCode = 200) {
 function validateEmail($email) {
     // TODO: Use filter_var with FILTER_VALIDATE_EMAIL
     // Return true if valid, false otherwise
-    function validateEmail($email) {
+  
     return filter_var($email, FILTER_VALIDATE_EMAIL) !== false;
-}
 
 }
 
@@ -615,13 +623,12 @@ function sanitizeInput($data) {
     // TODO: Strip HTML tags using strip_tags()
     // TODO: Convert special characters using htmlspecialchars()
     // Return sanitized data
-    function sanitizeInput($data) {
+   
     $data = trim($data);
     $data = strip_tags($data);
     $data = htmlspecialchars($data, ENT_QUOTES, 'UTF-8');
     return $data;
 }
 
-}
 
 ?>

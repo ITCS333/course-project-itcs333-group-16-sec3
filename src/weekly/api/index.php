@@ -1,4 +1,4 @@
-<?php
+ <?php
 header('Content-Type: application/json; charset=utf-8');
 session_start();
 
@@ -192,5 +192,3 @@ if($action==='comment_edit' && $method==='POST'){
 
 // Default invalid action
 http_response_code(400); echo json_encode(['error'=>'invalid action']); exit;
-
-

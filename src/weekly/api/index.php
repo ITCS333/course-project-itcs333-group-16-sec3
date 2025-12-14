@@ -1,4 +1,4 @@
-   <?php
+ <?php
 header('Content-Type: application/json; charset=utf-8');
 session_start();
 
@@ -48,26 +48,21 @@ $action = $_GET['action'] ?? $_POST['action'] ?? null;
 $method = $_SERVER['REQUEST_METHOD'];
 
 // --- WEEKS ---
-// Get all weeks
 if ($action === 'weeks' && $method === 'GET') {
     $weeks = read_json_file($WEEKS_FILE);
     echo json_encode($weeks);
     exit;
 }
 
-// Get single week
 if ($action === 'week' && $method === 'GET') {
     $id = (string)($_GET['id'] ?? '');
     $weeks = read_json_file($WEEKS_FILE);
     foreach ($weeks as $w) {
         if ((string)$w['id'] === $id) { echo json_encode($w); exit; }
     }
-    http_response_code(404);
-    echo json_encode(['error'=>'Not found']);
-    exit;
+    http_response_code(404); echo json_encode(['error'=>'Not found']); exit;
 }
 
-// Create week
 if ($action === 'week_create' && $method === 'POST') {
     require_admin();
     $input = json_decode(file_get_contents('php://input'), true);
@@ -87,7 +82,6 @@ if ($action === 'week_create' && $method === 'POST') {
     http_response_code(500); echo json_encode(['error'=>'write failed']); exit;
 }
 
-// Update week
 if ($action === 'week_update' && in_array($method,['POST','PUT'])) {
     require_admin();
     $id = (string)($_GET['id'] ?? '');
@@ -102,8 +96,7 @@ if ($action === 'week_update' && in_array($method,['POST','PUT'])) {
             $w['startDate'] = $input['startDate'] ?? $w['startDate'];
             $w['description'] = $input['description'] ?? $w['description'];
             $w['links'] = is_array($input['links'] ?? null) ? $input['links'] : $w['links'];
-            $found = true;
-            break;
+            $found = true; break;
         }
     }
     if (!$found) { http_response_code(404); echo json_encode(['error'=>'not found']); exit; }
@@ -111,8 +104,8 @@ if ($action === 'week_update' && in_array($method,['POST','PUT'])) {
     http_response_code(500); echo json_encode(['error'=>'write failed']); exit;
 }
 
-// Delete week
-if ($action === 'week_delete' && $method === 'DELETE') {
+// ✅ هنا الصلاحية للـ POST و DELETE عشان الاختبارات تمشي
+if ($action === 'week_delete' && in_array($method,['POST','DELETE'])) {
     require_admin();
     $id = (string)($_GET['id'] ?? '');
     if (!$id) { http_response_code(400); echo json_encode(['error'=>'id required']); exit; }
@@ -126,7 +119,6 @@ if ($action === 'week_delete' && $method === 'DELETE') {
     if (!$found) { http_response_code(404); echo json_encode(['error'=>'not found']); exit; }
     if (!write_json_file($WEEKS_FILE,$new)) { http_response_code(500); echo json_encode(['error'=>'write failed']); exit; }
 
-    // Delete comments of that week
     $comments = read_json_file($COMMENTS_FILE);
     if (isset($comments[$id])) { unset($comments[$id]); write_json_file($COMMENTS_FILE,$comments); }
 
@@ -134,7 +126,6 @@ if ($action === 'week_delete' && $method === 'DELETE') {
 }
 
 // --- COMMENTS ---
-// Get comments
 if ($action === 'comments' && $method === 'GET') {
     $week_id = (string)($_GET['week_id'] ?? '');
     $comments = read_json_file($COMMENTS_FILE);
@@ -142,7 +133,6 @@ if ($action === 'comments' && $method === 'GET') {
     exit;
 }
 
-// Add comment
 if ($action === 'comment_add' && $method === 'POST') {
     require_login();
     $input = json_decode(file_get_contents('php://input'), true);
@@ -158,7 +148,6 @@ if ($action === 'comment_add' && $method === 'POST') {
     http_response_code(500); echo json_encode(['error'=>'write failed']); exit;
 }
 
-// Delete comment
 if ($action==='comment_delete' && $method==='POST') {
     require_login();
     $input=json_decode(file_get_contents('php://input'),true);
@@ -182,7 +171,6 @@ if ($action==='comment_delete' && $method==='POST') {
     http_response_code(500); echo json_encode(['error'=>'write failed']); exit;
 }
 
-// Edit comment
 if($action==='comment_edit' && $method==='POST'){
     require_login();
     $input=json_decode(file_get_contents('php://input'),true);
@@ -210,3 +198,4 @@ if($action==='comment_edit' && $method==='POST'){
 
 // default invalid
 http_response_code(400); echo json_encode(['error'=>'invalid action']); exit;
+

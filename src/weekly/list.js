@@ -1,4 +1,4 @@
- const apiBase = 'api/index.php';
+  const apiBase = 'api/index.php';
 const hasDOM = typeof document !== 'undefined';
 const hasFetch = typeof fetch !== 'undefined';
 
@@ -42,7 +42,6 @@ async function loadWeeks() {
 }
 
 /* ========================= */
-
 function escapeHtml(s) {
   if (!s) return '';
   return s
@@ -72,18 +71,31 @@ function renderWeeks(weeksArray) {
   );
 }
 
+// ✅ Load and render safely
 async function loadAndRender() {
-  const weeksList = await loadWeeks(); // ✅ تغيير الاسم
-  weeksList.sort((a, b) => (a.startDate || '').localeCompare(b.startDate || ''));
-  renderWeeks(weeksList);
+  const weeks = await loadWeeks(); // داخل الدالة async فقط
+  weeks.sort((a, b) => (a.startDate || '').localeCompare(b.startDate || ''));
+  renderWeeks(weeks);
 }
 
 /* =========================
-   منع التشغيل التلقائي في Jest
+   منع التشغيل التلقائي في Jest والمتصفح
    ========================= */
-if (hasDOM && hasFetch) {
-  document.getElementById('weekForm')?.addEventListener('submit', onSubmit);
-  loadAndRender();
+if (hasDOM && hasFetch && typeof jest === 'undefined') {
+  const form = document.getElementById('weekForm');
+  if (form) form.addEventListener('submit', onSubmit);
+  loadAndRender().catch(console.error); // catch لتجنب أي خطأ async
 }
 
-
+/* =========================
+   Export functions for Jest
+   ========================= */
+if (typeof module !== 'undefined') {
+  module.exports = {
+    createWeekArticle,
+    loadWeeks,
+    renderWeeks,
+    loadAndRender,
+    escapeHtml
+  };
+}

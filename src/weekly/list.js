@@ -51,18 +51,18 @@ function escapeHtml(s) {
     .replaceAll('>', '&gt;');
 }
 
-function renderWeeks(weeks) {
+function renderWeeks(weeksArray) {
   if (!hasDOM) return;
 
   const container = document.getElementById('weeksList');
   if (!container) return;
 
-  if (!weeks || weeks.length === 0) {
+  if (!weeksArray || weeksArray.length === 0) {
     container.innerHTML = '<p>No weeks available yet.</p>';
     return;
   }
 
-  container.innerHTML = weeks.map(createWeekArticle).join('');
+  container.innerHTML = weeksArray.map(createWeekArticle).join('');
 
   document.querySelectorAll('.editBtn').forEach(b =>
     b.addEventListener('click', onEdit)
@@ -73,11 +73,9 @@ function renderWeeks(weeks) {
 }
 
 async function loadAndRender() {
-  const weeks = await loadWeeks();
-  weeks.sort((a, b) =>
-    (a.startDate || '').localeCompare(b.startDate || '')
-  );
-  renderWeeks(weeks);
+  const weeksList = await loadWeeks(); // ✅ تغيير الاسم
+  weeksList.sort((a, b) => (a.startDate || '').localeCompare(b.startDate || ''));
+  renderWeeks(weeksList);
 }
 
 /* =========================
@@ -87,4 +85,5 @@ if (hasDOM && hasFetch) {
   document.getElementById('weekForm')?.addEventListener('submit', onSubmit);
   loadAndRender();
 }
+
 

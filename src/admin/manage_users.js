@@ -178,19 +178,7 @@ function handleTableClick(event) {
 }
 
 // Handle search input
-function handleSearch() {
-  const term = searchInput.value.toLowerCase();
 
-  if (!term) {
-    renderTable(students);
-    return;
-  }
-
-  const filtered = students.filter(student =>
-    student.name.toLowerCase().includes(term)
-  );
-  renderTable(filtered);
-}
 
 /**
  * TODO: Implement the handleSearch function.

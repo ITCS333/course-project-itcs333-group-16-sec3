@@ -28,7 +28,7 @@
 
 
 </head>
-<body <!-- TODO: Add any styling to the 'body' tag to center the login form on the page. -->>
+<body>
 
     <!-- This will be the main content area of the page. -->
     <!-- TODO: Use the 'main' element to contain the login form, as it represents the primary content of the document. -->
@@ -43,11 +43,12 @@
 
             <!-- The form element will wrap all the inputs. -->
             <!-- TODO: Create a 'form' element. The 'action' can be '#' for now. -->
- <form action="#" method="post" id="login-form"></form>
+ <form action="login.php" method="post" id="login-form">
+
                 <!-- TODO: Use a 'fieldset' to group all the related controls for the login form. -->
-                <fieldset></fieldset>
+              
                     <!-- TODO: Add a 'legend' to caption the fieldset. e.g., "Secure Login". This improves accessibility. -->
-<legend class="mb-3">Secure Login</legend>
+                     <fieldset><legend class="mb-3">Secure Login</legend></fieldset>
                     <!-- TODO: Add a 'label' for the email input field.
                          The 'for' attribute should be "email".
                          The text should be "Email Address". -->
@@ -58,8 +59,9 @@
                          - The type should be "email".
                          - The id must be "email".
                          - It should be a required field. -->
-  <input type="email" id="email" class="form-control" required>
-                         </div>
+<input type="email" id="email" name="email" required>
+<div>
+
 
                     <!-- TODO: Add a 'label' for the password input field.
                          The 'for' attribute should be "password".

@@ -48,13 +48,21 @@ if ($method !== 'POST') {
 // TODO: Retrieve the raw POST data
 // The Fetch API sends JSON data in the request body
 // Use file_get_contents with 'php://input' to read the raw request body
-$rawInput = file_get_contents('php://input');
 
-// TODO: Decode the JSON data into a PHP associative array
-// Use json_decode with the second parameter set to true
-$data = json_decode($rawInput, true);
-if (!is_array($data)) {
-    $data = [];
+/* ✅ ADDITION: Support normal HTML form POST */
+if (!empty($_POST)) {
+    $data = [
+        'email'    => $_POST['email'] ?? null,
+        'password' => $_POST['password'] ?? null
+    ];
+} else {
+    $rawInput = file_get_contents('php://input');
+    // TODO: Decode the JSON data into a PHP associative array
+    // Use json_decode with the second parameter set to true
+    $data = json_decode($rawInput, true);
+    if (!is_array($data)) {
+        $data = [];
+    }
 }
 
 // TODO: Extract the email and password from the decoded data
@@ -97,7 +105,6 @@ if (strlen($password) < 8) {
     http_response_code(400);
     exit;
 }
-
 
 // --- Database Connection ---
 // TODO: Get the database connection using the provided function
@@ -160,8 +167,8 @@ try{
 
     // --- Handle Successful Authentication ---
     // TODO: If password verification succeeds:
-    
-    
+
+
         // TODO: Store user information in session variables
         // Store: user_id, user_name, user_email, logged_in
         // DO NOT store the password in the session!
@@ -199,8 +206,8 @@ try{
     }
     // --- Handle Failed Authentication ---
     // TODO: If user doesn't exist OR password verification fails:
-    
-    
+
+
         // TODO: Prepare an error response array
         // Include:
         // - 'success' => false

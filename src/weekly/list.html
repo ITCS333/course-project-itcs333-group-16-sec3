@@ -1,24 +1,30 @@
-<!doctype html>
+ <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Weeks - Course Page</title>
   <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@2.0.6/css/pico.min.css">
-  <style> body { direction: rtl; } </style>
+  <style>
+    body { direction: rtl; }
+  </style>
 </head>
 <body>
-  <main class="container">
+
+  <!-- ✅ Header مطلوب في الاختبار -->
+  <header class="container">
     <h1>Weekly Course Preparation</h1>
     <p>Display all weeks — click any week to see details.</p>
+  </header>
 
+  <main class="container">
     <input id="search" placeholder="Search in titles or descriptions..." />
-
     <div id="weeksList"></div>
   </main>
 
   <script src="list.js"></script>
 </body>
 </html>
+
 
 

@@ -1,4 +1,4 @@
-  const apiBase = 'api/index.php';
+ const apiBase = 'api/index.php';
 const hasDOM = typeof document !== 'undefined';
 const hasFetch = typeof fetch !== 'undefined';
 
@@ -27,19 +27,21 @@ function createWeekArticle(week) {
   `;
 }
 
-/* ========================= */
-
-async function fetchWeeks() {
-  if (!hasFetch) return []; // ✅ يمنع خطأ Jest
-
+/* =========================
+   TASK3202 REQUIRED FUNCTION
+   ========================= */
+async function loadWeeks() {
+  if (!hasFetch) return [];
   try {
     const res = await fetch(`${apiBase}?action=weeks`);
+    if (!res || typeof res.json !== 'function') return [];
     return await res.json();
-  } catch (err) {
-    console.error(err);
+  } catch {
     return [];
   }
 }
+
+/* ========================= */
 
 function escapeHtml(s) {
   if (!s) return '';
@@ -70,51 +72,19 @@ function renderWeeks(weeks) {
   );
 }
 
-async function onEdit(e) {
-  const id = e.target.dataset.id;
-  try {
-    const res = await fetch(`${apiBase}?action=week&id=${encodeURIComponent(id)}`);
-    const week = await res.json();
-
-    document.getElementById('title').value = week.title || '';
-    document.getElementById('startDate').value = week.startDate || '';
-    document.getElementById('description').value = week.description || '';
-    document.getElementById('links').value = (week.links || []).join('\n');
-
-    const form = document.getElementById('weekForm');
-    form.dataset.editing = id;
-    document.querySelector('#weekForm button').textContent = 'Update Week';
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  } catch {
-    alert('Failed to load week data.');
-  }
-}
-
-async function onDelete(e) {
-  const id = e.target.dataset.id;
-  if (!confirm('Delete this week?')) return;
-
-  try {
-    const res = await fetch(
-      `${apiBase}?action=week_delete&id=${encodeURIComponent(id)}`,
-      { method: 'DELETE' }
-    );
-    const data = await res.json();
-    if (data.ok) loadAndRender();
-  } catch (err) {
-    alert('Network error: ' + err.message);
-  }
-}
-
 async function loadAndRender() {
-  const weeks = await fetchWeeks();
+  const weeks = await loadWeeks();
   weeks.sort((a, b) =>
     (a.startDate || '').localeCompare(b.startDate || '')
   );
   renderWeeks(weeks);
 }
 
-if (hasDOM) {
+/* =========================
+   منع التشغيل التلقائي في Jest
+   ========================= */
+if (hasDOM && hasFetch) {
   document.getElementById('weekForm')?.addEventListener('submit', onSubmit);
   loadAndRender();
 }
+

@@ -60,9 +60,8 @@ function displayMessage(message, type) {
  */
 function isValidEmail(email) {
   // ... your implementation here ...
-  const regex = /\S+@\S+\.\S+/;
-  return regex.test(email);
-
+const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+return regex.test(email);
 
 }
 
@@ -97,7 +96,7 @@ function isValidPassword(password) {
  */
 function handleLogin(event) {
   // ... your implementation here ...
-function handleLogin(event) {
+
  
   event.preventDefault();
 
@@ -122,7 +121,7 @@ function handleLogin(event) {
   passwordInput.value = "";
 }
 
-}
+
 
 /**
  * TODO: Implement the setupLoginForm function.

@@ -19,4 +19,4 @@
 ## Live Hosted Application
 
 [https://ab54e794-efd0-4ce1-8a12-0da8efcffff5-00-7qph8ddyrsd.sisko.replit.dev/](https://64f5edca-5e77-46b5-ab7f-5c95bca6f88c-00-16m1e4qvwyw4y.pike.replit.dev/)
-https://replit.com/@wev90611/ITCS333-Course-Project
+replit page: https://replit.com/@wev90611/ITCS333-Course-Project

@@ -1,0 +1,151 @@
+/* ---------------- Reset ---------------- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* ---------------- Body ---------------- */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f0f4f8;
+    color: #333;
+    line-height: 1.6;
+}
+
+/* ---------------- Header ---------------- */
+header {
+    background-color: #1e3a8a; /* dark blue */
+    color: #fff;
+    padding: 30px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+header h1 {
+    font-size: 2rem;
+}
+
+header .login-btn {
+    background-color: #3b82f6; /* lighter blue */
+    color: #fff;
+    padding: 10px 20px;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: 600;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+header .login-btn:hover {
+    background-color: #2563eb;
+    transform: translateY(-2px);
+}
+
+/* ---------------- Login Card ---------------- */
+.login-card {
+    max-width: 400px;
+    margin: 60px auto;
+    padding: 30px;
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+.login-card h2 {
+    text-align: center;
+    margin-bottom: 25px;
+    font-size: 1.8rem;
+}
+
+.login-card fieldset {
+    border: none;
+}
+
+.login-card legend {
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+}
+
+.login-card .form-group {
+    margin-bottom: 20px;
+}
+
+.login-card label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.login-card input[type="email"],
+.login-card input[type="password"] {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 1rem;
+}
+
+.login-card input[type="email"]:focus,
+.login-card input[type="password"]:focus {
+    border-color: #1e3a8a;
+    outline: none;
+}
+
+/* ---------------- Submit Button ---------------- */
+.login-card button#login {
+    width: 100%;
+    padding: 12px;
+    background-color: #3b82f6;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.login-card button#login:hover {
+    background-color: #2563eb;
+    transform: translateY(-2px);
+}
+
+/* ---------------- Message Container ---------------- */
+#message-container {
+    margin-top: 15px;
+    text-align: center;
+    font-weight: bold;
+}
+
+#message-container.success {
+    color: green;
+}
+
+#message-container.error {
+    color: red;
+}
+
+/* ---------------- Footer ---------------- */
+footer {
+    text-align: center;
+    padding: 20px;
+    background-color: #1e3a8a;
+    color: #fff;
+    margin-top: 50px;
+}
+
+/* ---------------- Responsive ---------------- */
+@media (max-width: 768px) {
+    header {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+
+    .login-card {
+        margin: 40px 20px;
+        padding: 25px;
+    }
+}
